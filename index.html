@@ -1,87 +1,106 @@
-<!-- frontend/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Live Events Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
-    emailjs.init("jpK60NdNCrth2Op4H"); // Replace with your EmailJS user ID
+    window.onload = function () {
+      emailjs.init("jpK60NdNCrth2Op4H");
+    };
   </script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     #events { margin-top: 20px; }
-    .event { margin-bottom: 15px; }
+    .event { margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h1>Find Events Happening Around You 🎉</h1>
-<p>Allow location access to see real events nearby.</p>
-<button onclick="getLocation()">Find Events</button>
+  <h1>Find Events Happening Around You 🎉</h1>
+  <p>Allow location access to see real events nearby.</p>
+  <button onclick="getLocation()">Find Events</button>
 
-<div id="events"></div>
+  <div id="events"></div>
 
-<script>
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(handlePosition, showError);
-  } else {
-    alert("Geolocation is not supported by this browser.");
-  }
-}
-
-function handlePosition(position) {
-  const lat = position.coords.latitude;
-  const lon = position.coords.longitude;
-
-  // Send to EmailJS
-  emailjs.send("service_wkv2a1g", "template_khwf93m", {
-    latitude: lat,
-    longitude: lon
-  }).then(() => {
-    console.log("📧 Location sent to email.");
-  }).catch(err => {
-    console.error("❌ Email send failed:", err);
-  });
-
-  // Fetch events from your backend
-  fetch(`http://localhost:3000/events?lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
-    .then(data => {
-      if (!data._embedded || !data._embedded.events) {
-        document.getElementById("events").innerHTML = "<p>No events found.</p>";
-        return;
+  <script>
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(handlePosition, showError);
+      } else {
+        alert("Geolocation is not supported by this browser.");
       }
-      displayEvents(data._embedded.events);
-    })
-    .catch(err => {
-      console.error("Error fetching events:", err);
-    });
-}
+    }
 
-function displayEvents(events) {
-  let html = "<h2>Events near you:</h2>";
-  events.forEach(e => {
-    const date = new Date(e.dates.start.dateTime).toLocaleString();
-    html += `
-      <div class="event">
-        <strong>${e.name}</strong><br/>
-        When: ${date}<br/>
-        Where: ${e._embedded.venues[0].name}<br/>
-        <a href="${e.url}" target="_blank">More Info</a>
-      </div>
-    `;
-  });
-  document.getElementById("events").innerHTML = html;
-}
+    function handlePosition(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
 
-function showError(err) {
-  alert("Location error: " + err.message);
-}
-</script>
+      // console.log("📍 Your Location:", lat, lon); // ✅ Add this
+
+      // // Check in Google Maps
+      // console.log(`Google Maps link: https://www.google.com/maps?q=${lat},${lon}`);
+
+      // ✅ Send location via EmailJS
+      // emailjs.send("service_wkv2a1g", "template_khwf93m", {
+      //   latitude: https://www.google.com/maps?q=${lat},${lon},
+      //   longitude: lon
+      // }).then(() => {
+      //   console.log("📧 Got your Location, Please wait!!!");
+      // }).catch(err => {
+      //   console.warn("❌ Something went wrong on the way:", err);
+      // });
+
+      // ✅ Fetch events from backend
+      fetch(`https://event-tracker-backend-pa0u.onrender.com/events/?lat=${lat}&lon=${lon}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data._embedded || !data._embedded.events || data._embedded.events.length === 0) {
+            console.log(data, data._embedded);
+            document.getElementById("events").innerHTML = "<p>No events found near you.</p>";
+            return;
+          }
+          displayEvents(data._embedded.events);
+        })
+        .catch(err => {
+          console.error("Error fetching events:", err);
+          document.getElementById("events").innerHTML = "<p>Something went wrong while fetching events.</p>";
+        });
+    }
+
+    function displayEvents(events) {
+      let html = "<h2>Events near you:</h2>";
+      events.forEach(e => {
+        const name = e.name || "Unnamed Event";
+        const date = e.dates?.start?.dateTime
+          ? new Date(e.dates.start.dateTime).toLocaleString()
+          : "Date not available";
+        const venue = e._embedded?.venues?.[0]?.name || "Venue not available";
+        const url = e.url || "#";
+
+        html += `
+          <div class="event">
+            <strong>${name}</strong><br/>
+            When: ${date}<br/>
+            Where: ${venue}<br/>
+            <a href="${url}" target="_blank">More Info</a>
+          </div>
+        `;
+      });
+      document.getElementById("events").innerHTML = html;
+    }
+
+    function showError(err) {
+      let msg = "Location error.";
+      switch (err.code) {
+        case err.PERMISSION_DENIED: msg = "User denied the request for Geolocation."; break;
+        case err.POSITION_UNAVAILABLE: msg = "Location information is unavailable."; break;
+        case err.TIMEOUT: msg = "The request to get user location timed out."; break;
+      }
+      alert(msg);
+    }
+  </script>
 
 </body>
 </html>
-<!-- service_wkv2a1g -->
-<!-- template_khwf93m -->
