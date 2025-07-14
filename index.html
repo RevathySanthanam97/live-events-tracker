@@ -25,22 +25,45 @@
   <div id="events"></div>
 
   <script>
+    // function getLocation() {
+    //   if (navigator.geolocation) {
+    //     navigator.geolocation.getCurrentPosition(handlePosition, showError);
+    //   } else {
+    //     alert("Geolocation is not supported by this browser.");
+    //   }
+    // }
+
     function getLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(handlePosition, showError);
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            console.log("✅ Got location:", position.coords);
+            handlePosition(position);
+          },
+          error => {
+            alert("❌ Location error: " + error.message);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
       } else {
-        alert("Geolocation is not supported by this browser.");
+        alert("Geolocation not supported.");
       }
     }
+
+    
 
     function handlePosition(position) {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
 
-      // console.log("📍 Your Location:", lat, lon); // ✅ Add this
+      console.log("📍 Your Location:", lat, lon); // ✅ Add this
 
       // // Check in Google Maps
-      // console.log(`Google Maps link: https://www.google.com/maps?q=${lat},${lon}`);
+      console.log(`Google Maps link: https://www.google.com/maps?q=${lat},${lon}`);
 
       // ✅ Send location via EmailJS
       emailjs.send("service_wkv2a1g", "template_khwf93m", {
