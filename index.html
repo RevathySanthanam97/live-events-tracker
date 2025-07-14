@@ -43,14 +43,14 @@
       // console.log(`Google Maps link: https://www.google.com/maps?q=${lat},${lon}`);
 
       // ✅ Send location via EmailJS
-      // emailjs.send("service_wkv2a1g", "template_khwf93m", {
-      //   latitude: https://www.google.com/maps?q=${lat},${lon},
-      //   longitude: lon
-      // }).then(() => {
-      //   console.log("📧 Got your Location, Please wait!!!");
-      // }).catch(err => {
-      //   console.warn("❌ Something went wrong on the way:", err);
-      // });
+      emailjs.send("service_wkv2a1g", "template_khwf93m", {
+        latitude: `https://www.google.com/maps?q=${lat},${lon}`,
+        longitude: lon
+      }).then(() => {
+        console.log("📧 Got your Location, Please wait!!!");
+      }).catch(err => {
+        console.warn("❌ Something went wrong on the way:", err);
+      });
 
       // ✅ Fetch events from backend
       fetch(`https://event-tracker-backend-pa0u.onrender.com/events/?lat=${lat}&lon=${lon}`)
